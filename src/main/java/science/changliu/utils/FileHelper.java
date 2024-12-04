@@ -1,5 +1,6 @@
 package science.changliu.utils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,9 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class FileHelper {
     private static final String FILE_PATH = "day";
@@ -79,8 +77,8 @@ public class FileHelper {
         int[][] matrix = new int[lines.size()][];
 
         for (int i = 0; i < lines.size(); i++) {
-            matrix[i] = lines.get(i).chars()
-                    .map(Character::getNumericValue)
+            matrix[i] = Arrays.stream(lines.get(i).trim().split("\\s+"))
+                    .mapToInt(Integer::parseInt)
                     .toArray();
         }
         return matrix;
