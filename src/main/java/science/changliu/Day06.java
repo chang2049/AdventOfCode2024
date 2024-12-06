@@ -123,9 +123,114 @@ public class Day06 {
         return count;
     }
 
+    private List<int[][]> findAllPossiblePaths() {
+        List<int[][]> allPaths = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        int[] currentPos = startPosition.clone();
+        int direction = 0;
+
+        // Track both the path and the turns
+        List<int[]> positions = new ArrayList<>();
+        List<Integer> turns = new ArrayList<>();
+
+        while (true) {
+            positions.add(currentPos.clone());
+            turns.add(direction);
+
+            String state = currentPos[0] + "," + currentPos[1] + "," + direction;
+            if (visited.contains(state)) {
+                break;
+            }
+            visited.add(state);
+
+            int nextRow = currentPos[0] + directions[direction][0];
+            int nextCol = currentPos[1] + directions[direction][1];
+
+            if (nextRow < 0 || nextRow >= map.length ||
+                    nextCol < 0 || nextCol >= map[0].length) {
+                break;
+            }
+
+            if (map[nextRow][nextCol] == '#') {
+                direction = (direction + 1) % 4;
+            } else {
+                currentPos = new int[]{nextRow, nextCol};
+            }
+        }
+
+        // Generate all possible paths by considering each segment
+        for (int i = 0; i < positions.size() - 1; i++) {
+            int[][] path = new int[3][];  // start, end, direction
+            path[0] = positions.get(i);
+            path[1] = positions.get(i + 1);
+            path[2] = new int[]{turns.get(i)};
+            allPaths.add(path);
+        }
+
+        return allPaths;
+    }
+
+    private boolean wouldCreateLoop(int row, int col, int direction, int[] start, int[] end) {
+        // Check if placing obstacle at (row, col) would force the guard to turn
+        // in a way that creates a loop back to the start position
+
+        // Calculate relative position to path
+        int dx = col - end[1];
+        int dy = row - end[0];
+
+        // Simplified loop detection based on relative position and direction
+        switch (direction) {
+            case 0: // moving up
+                return dx == 1 && dy >= 0;
+            case 1: // moving right
+                return dy == 1 && dx <= 0;
+            case 2: // moving down
+                return dx == -1 && dy <= 0;
+            case 3: // moving left
+                return dy == -1 && dx >= 0;
+            default:
+                return false;
+        }
+    }
+
+    public int solvePart2Optimized() {
+        Set<String> validPositions = new HashSet<>();
+        List<int[][]> allPaths = findAllPossiblePaths();
+
+        // For each path segment
+        for (int[][] path : allPaths) {
+            int[] start = path[0];
+            int[] end = path[1];
+            int direction = path[2][0];
+
+            // Check positions adjacent to path that could create a loop
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    // Calculate potential obstacle position
+                    int row = end[0] + i;
+                    int col = end[1] + j;
+
+                    // Skip invalid positions
+                    if (row < 0 || row >= map.length || col < 0 || col >= map[0].length ||
+                            map[row][col] != '.' || (row == startPosition[0] && col == startPosition[1])) {
+                        continue;
+                    }
+
+                    // Check if this position would force a turn that creates a loop
+                    if (wouldCreateLoop(row, col, direction, start, end)) {
+                        validPositions.add(row + "," + col);
+                    }
+                }
+            }
+        }
+
+        return validPositions.size();
+    }
+
+
     public static void main(String[] args) {
         Day06 solution = new Day06();
         System.out.println("Part 1 Solution: " + solution.solvePart1());
-        System.out.println("Part 2 Solution: " + solution.solvePart2());
+        System.out.println("Part 2 Solution: " + solution.solvePart2Optimized());
     }
 }
